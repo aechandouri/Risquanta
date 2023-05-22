@@ -5,6 +5,8 @@ import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
 
+import seaborn as sns
+
 class RiskEngine:
 
     def __init__(self, file):
