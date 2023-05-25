@@ -5,7 +5,6 @@ import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
 
-import seaborn as sns
 
 class RiskEngine:
 
@@ -106,6 +105,54 @@ class RiskEngine:
 
         return information_ratio
 
+    def semi_deviation(self, start_date, end_date):
+        # Filter data for the date range
+        data = self.df.loc[start_date:end_date].copy()
+
+        # Calculate daily returns
+        data['return'] = data['Adj Close'].pct_change()
+
+        # Filter negative returns
+        negative_returns = data['return'][data['return'] < 0]
+
+        # Calculate semi-deviation
+        semi_dev = np.sqrt(negative_returns.var())
+
+        return semi_dev
+
+    def var_historical(self, start_date, end_date, level=5):
+        # Filter data for the date range
+        data = self.df.loc[start_date:end_date].copy()
+
+        # Calculate daily returns
+        data['return'] = data['Adj Close'].pct_change()
+
+        # Drop any NaN values
+        data = data.dropna()
+
+        # Calculate historical VaR
+        var = np.percentile(data['return'], level)
+
+        return var
+
+    def cvar_historical(self, start_date, end_date, level=5):
+        # Filter data for the date range
+        data = self.df.loc[start_date:end_date].copy()
+
+        # Calculate daily returns
+        data['return'] = data['Adj Close'].pct_change()
+
+        # Drop any NaN values
+        data = data.dropna()
+
+        # Calculate historical VaR
+        var = np.percentile(data['return'], level)
+
+        # Calculate historical CVaR
+        cvar = data['return'][data['return'] <= var].mean()
+
+        return cvar
+
 
 # Usage
 if __name__ == "__main__":
@@ -122,3 +169,9 @@ if __name__ == "__main__":
                                                            risk_engine.information_ratio(start_date, end_date)))
     risk_engine.plot_prices(start_date, end_date)
     risk_engine.plot_volatility(start_date, end_date)
+    print("Semi-deviation from {} to {}: {:.2f}".format(start_date, end_date,
+                                                        risk_engine.semi_deviation(start_date, end_date)))
+    print("Historical VaR at 5% level from {} to {}: {:.2f}".format(start_date, end_date,
+                                                                    risk_engine.var_historical(start_date, end_date)))
+    print("Historical CVaR at 5% level from {} to {}: {:.2f}".format(start_date, end_date,
+                                                                     risk_engine.cvar_historical(start_date, end_date)))
