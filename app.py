@@ -4,6 +4,7 @@ from scipy.stats import linregress
 import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
+import scipy.stats as stats
 
 
 class RiskEngine:
@@ -153,6 +154,55 @@ class RiskEngine:
 
         return cvar
 
+    def skewness(self, start_date, end_date):
+        # Filter data for the date range
+        data = self.df.loc[start_date:end_date].copy()
+
+        # Calculate daily returns
+        data['return'] = data['Adj Close'].pct_change()
+
+        # Drop any NaN values
+        data = data.dropna()
+
+        # Calculate skewness
+        skewness = stats.skew(data['return'])
+
+        return skewness
+
+    def kurtosis(self, start_date, end_date):
+        # Filter data for the date range
+        data = self.df.loc[start_date:end_date].copy()
+
+        # Calculate daily returns
+        data['return'] = data['Adj Close'].pct_change()
+
+        # Drop any NaN values
+        data = data.dropna()
+
+        # Calculate kurtosis
+        kurtosis = stats.kurtosis(data['return'])
+
+        return kurtosis
+
+    def omega_ratio(self, start_date, end_date, threshold=0):
+        # Filter data for the date range
+        data = self.df.loc[start_date:end_date].copy()
+
+        # Calculate daily returns
+        data['return'] = data['Adj Close'].pct_change()
+
+        # Drop any NaN values
+        data = data.dropna()
+
+        # Separate returns above and below the threshold
+        returns_above_threshold = data['return'][data['return'] > threshold]
+        returns_below_threshold = data['return'][data['return'] <= threshold]
+
+        # Calculate Omega ratio
+        omega_ratio = returns_above_threshold.mean() / abs(returns_below_threshold.mean())
+
+        return omega_ratio
+
 
 # Usage
 if __name__ == "__main__":
@@ -175,3 +225,9 @@ if __name__ == "__main__":
                                                                     risk_engine.var_historical(start_date, end_date)))
     print("Historical CVaR at 5% level from {} to {}: {:.2f}".format(start_date, end_date,
                                                                      risk_engine.cvar_historical(start_date, end_date)))
+    print("Skewness from {} to {}: {:.2f}".format(start_date, end_date,
+                                                  risk_engine.skewness(start_date, end_date)))
+    print("Kurtosis from {} to {}: {:.2f}".format(start_date, end_date,
+                                                  risk_engine.kurtosis(start_date, end_date)))
+    print("Omega ratio from {} to {}: {:.2f}".format(start_date, end_date,
+                                                     risk_engine.omega_ratio(start_date, end_date)))
